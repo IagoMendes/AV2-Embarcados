@@ -113,6 +113,19 @@ const uint32_t BUTTON_X = ILI9488_LCD_WIDTH/2;
 const uint32_t BUTTON_Y = ILI9488_LCD_HEIGHT/2;
 	
 /************************************************************************/
+/* AFEC                                                                  */
+/************************************************************************/
+/** Reference voltage for AFEC,in mv. */
+#define VOLT_REF        (3300)
+
+/** The maximal digital value */
+/** 2^12 - 1                  */
+#define MAX_DIGITAL     (4095UL)
+
+/* Canal do sensor de temperatura */
+#define AFEC_CHANNEL_TEMP_SENSOR 11
+	
+/************************************************************************/
 /* RTOS                                                                  */
 /************************************************************************/
 #define TASK_MXT_STACK_SIZE            (2*1024/sizeof(portSTACK_TYPE))
@@ -127,6 +140,7 @@ typedef struct {
 } touchData;
 
 QueueHandle_t xQueueTouch;
+QueueHandle_t xQueueAFEC;
 
 /************************************************************************/
 /* RTOS hooks                                                           */
@@ -304,8 +318,8 @@ void draw_screen(void) {
 	ili9488_set_foreground_color(COLOR_CONVERT(COLOR_WHITE));
 	ili9488_draw_filled_rectangle(0, 0, ILI9488_LCD_WIDTH-1, ILI9488_LCD_HEIGHT-1);
 	ili9488_draw_pixmap(ILI9488_LCD_WIDTH - soneca.width, 15, soneca.width, soneca.height, soneca.data);
-	ili9488_draw_pixmap(70, 300, termometro.width, termometro.height, termometro.data);
-	ili9488_draw_pixmap(180, 300, ar.width, ar.height, ar.data);
+	ili9488_draw_pixmap(50, 300, termometro.width, termometro.height, termometro.data);
+	ili9488_draw_pixmap(200, 300, ar.width, ar.height, ar.data);
 	font_draw_text(&digital52, "-------------", 0, 100, 1);
 }
 
@@ -323,7 +337,8 @@ uint32_t convert_axis_system_y(uint32_t touch_x) {
 
 void update_screen(uint32_t tx, uint32_t ty) {
 	font_draw_text(&digital52, "HH:MM", 20, 20, 1);
-	
+	font_draw_text(&digital52, "15", 45, 250, 1);
+	font_draw_text(&digital52, "100%", 190, 250, 1);
 	if(tx >= BUTTON_X-BUTTON_W/2 && tx <= BUTTON_X + BUTTON_W/2) {
 		if(ty >= BUTTON_Y-BUTTON_H/2 && ty <= BUTTON_Y) {
 			
@@ -370,6 +385,75 @@ void mxt_handler(struct mxt_device *device, uint *x, uint *y)
 	} while ((mxt_is_message_pending(device)) & (i < MAX_ENTRIES));
 }
 
+//Funcoes afec
+
+static int32_t convert_adc_to_temp(int32_t ADC_value){
+
+  int32_t ul_vol;
+  int32_t ul_temp;
+
+	ul_vol = ADC_value * VOLT_REF / MAX_DIGITAL;
+
+  /*
+   * According to datasheet, The output voltage VT = 0.72V at 27C
+   * and the temperature slope dVT/dT = 2.33 mV/C
+   */
+  ul_temp = (ul_vol - 720)  * 100 / 233 + 27;
+  return(ul_temp);
+}
+
+static void AFEC_Temp_callback(void){
+	uint32_t temp = afec_channel_get_value(AFEC0, AFEC_CHANNEL_TEMP_SENSOR);
+	xQueueSendFromISR( xQueueAFEC, &temp, NULL );
+}
+
+static void config_ADC_TEMP(void){
+/*************************************
+   * Ativa e configura AFEC
+   *************************************/
+  /* Ativa AFEC - 0 */
+	afec_enable(AFEC0);
+
+	/* struct de configuracao do AFEC */
+	struct afec_config afec_cfg;
+
+	/* Carrega parametros padrao */
+	afec_get_config_defaults(&afec_cfg);
+
+	/* Configura AFEC */
+	afec_init(AFEC0, &afec_cfg);
+
+	/* Configura trigger por software */
+	afec_set_trigger(AFEC0, AFEC_TRIG_TIO_CH_0);
+
+	AFEC0->AFEC_MR |= 3;
+
+	/* configura call back */
+	afec_set_callback(AFEC0, AFEC_INTERRUPT_EOC_11,	AFEC_Temp_callback, 5);
+
+	/*** Configuracao espec?fica do canal AFEC ***/
+	struct afec_ch_config afec_ch_cfg;
+	afec_ch_get_config_defaults(&afec_ch_cfg);
+	afec_ch_cfg.gain = AFEC_GAINVALUE_0;
+	afec_ch_set_config(AFEC0, AFEC_CHANNEL_TEMP_SENSOR, &afec_ch_cfg);
+
+	/*
+	* Calibracao:
+	* Because the internal ADC offset is 0x200, it should cancel it and shift
+	 down to 0.
+	 */
+	afec_channel_set_analog_offset(AFEC0, AFEC_CHANNEL_TEMP_SENSOR, 0x200);
+
+	/***  Configura sensor de temperatura ***/
+	struct afec_temp_sensor_config afec_temp_sensor_cfg;
+
+	afec_temp_sensor_get_config_defaults(&afec_temp_sensor_cfg);
+	afec_temp_sensor_set_config(AFEC0, &afec_temp_sensor_cfg);
+
+	/* Selecina canal e inicializa conversao */
+	afec_channel_enable(AFEC0, AFEC_CHANNEL_TEMP_SENSOR);
+}
+
 /************************************************************************/
 /* tasks                                                                */
 /************************************************************************/
@@ -406,6 +490,27 @@ void task_lcd(void){
   }	 
 }
 
+void task_afec(void){
+	
+	xQueueAFEC = xQueueCreate(5, sizeof(int));
+
+	config_ADC_TEMP();
+	pmc_enable_periph_clk(ID_PIOA);
+	pio_set_output(PIOA, 1, 0, 0, 0);
+	pio_set_peripheral(PIOA, PIO_PERIPH_B, 1);
+	
+	uint32_t g_ul_value = 0;
+	
+	while (true) {
+		afec_start_software_conversion(AFEC0);
+		if(xQueueReceive( xQueueAFEC, &g_ul_value, (TickType_t)4000/portTICK_PERIOD_MS)){
+			printf("%d\n", convert_adc_to_temp(g_ul_value));
+				
+		}
+		
+	}
+}
+
 /************************************************************************/
 /* main                                                                 */
 /************************************************************************/
@@ -435,7 +540,12 @@ int main(void)
   if (xTaskCreate(task_lcd, "lcd", TASK_LCD_STACK_SIZE, NULL, TASK_LCD_STACK_PRIORITY, NULL) != pdPASS) {
     printf("Failed to create test led task\r\n");
   }
-
+	
+  /* Create task to AFEC */
+//   if (xTaskCreate(task_afec, "afec", TASK_LCD_STACK_SIZE, NULL, TASK_LCD_STACK_PRIORITY, NULL) != pdPASS) {
+// 	  printf("Failed to create test led task\r\n");
+//   }
+  
   /* Start the scheduler. */
   vTaskStartScheduler();
 
