@@ -88,9 +88,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
 #include "conf_board.h"
 #include "conf_example.h"
 #include "conf_uart_serial.h"
+
+#include "tfont.h"
+#include "soneca.h"
+#include "termometro.h"
+#include "digital521.h"
+#include "ar.h"
+
 
 /************************************************************************/
 /* LCD + TOUCH                                                          */
@@ -127,9 +135,7 @@ QueueHandle_t xQueueTouch;
 /**
  * \brief Called if stack overflow during execution
  */
-extern void vApplicationStackOverflowHook(xTaskHandle *pxTask,
-		signed char *pcTaskName)
-{
+extern void vApplicationStackOverflowHook(xTaskHandle *pxTask,signed char *pcTaskName){
 	printf("stack overflow %x %s\r\n", pxTask, (portCHAR *)pcTaskName);
 	/* If the parameters have been corrupted then inspect pxCurrentTCB to
 	 * identify which task has overflowed its stack.
@@ -278,25 +284,29 @@ static void mxt_init(struct mxt_device *device)
 /* funcoes                                                              */
 /************************************************************************/
 
+void font_draw_text(tFont *font, const char *text, int x, int y, int spacing) {
+	char *p = text;
+	
+	while(*p != NULL) {
+		char letter = *p;
+		int letter_offset = letter - font->start_char;
+		
+		if(letter <= font->end_char) {
+			tChar *current_char = font->chars + letter_offset;
+			ili9488_draw_pixmap(x, y, current_char->image->width, current_char->image->height, current_char->image->data);
+			x += current_char->image->width + spacing;
+		}
+		p++;
+	}
+}
+
 void draw_screen(void) {
 	ili9488_set_foreground_color(COLOR_CONVERT(COLOR_WHITE));
 	ili9488_draw_filled_rectangle(0, 0, ILI9488_LCD_WIDTH-1, ILI9488_LCD_HEIGHT-1);
-}
-
-void draw_button(uint32_t clicked) {
-	static uint32_t last_state = 255; // undefined
-	if(clicked == last_state) return;
-	
-	ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
-	ili9488_draw_filled_rectangle(BUTTON_X-BUTTON_W/2, BUTTON_Y-BUTTON_H/2, BUTTON_X+BUTTON_W/2, BUTTON_Y+BUTTON_H/2);
-	if(clicked) {
-		ili9488_set_foreground_color(COLOR_CONVERT(COLOR_TOMATO));
-		ili9488_draw_filled_rectangle(BUTTON_X-BUTTON_W/2+BUTTON_BORDER, BUTTON_Y+BUTTON_BORDER, BUTTON_X+BUTTON_W/2-BUTTON_BORDER, BUTTON_Y+BUTTON_H/2-BUTTON_BORDER);
-	} else {
-		ili9488_set_foreground_color(COLOR_CONVERT(COLOR_GREEN));
-		ili9488_draw_filled_rectangle(BUTTON_X-BUTTON_W/2+BUTTON_BORDER, BUTTON_Y-BUTTON_H/2+BUTTON_BORDER, BUTTON_X+BUTTON_W/2-BUTTON_BORDER, BUTTON_Y-BUTTON_BORDER);
-	}
-	last_state = clicked;
+	ili9488_draw_pixmap(ILI9488_LCD_WIDTH - soneca.width, 15, soneca.width, soneca.height, soneca.data);
+	ili9488_draw_pixmap(70, 300, termometro.width, termometro.height, termometro.data);
+	ili9488_draw_pixmap(180, 300, ar.width, ar.height, ar.data);
+	font_draw_text(&digital52, "-------------", 0, 100, 1);
 }
 
 uint32_t convert_axis_system_x(uint32_t touch_y) {
@@ -312,13 +322,16 @@ uint32_t convert_axis_system_y(uint32_t touch_x) {
 }
 
 void update_screen(uint32_t tx, uint32_t ty) {
+	font_draw_text(&digital52, "HH:MM", 20, 20, 1);
+	
 	if(tx >= BUTTON_X-BUTTON_W/2 && tx <= BUTTON_X + BUTTON_W/2) {
 		if(ty >= BUTTON_Y-BUTTON_H/2 && ty <= BUTTON_Y) {
-			draw_button(1);
+			
 		} else if(ty > BUTTON_Y && ty < BUTTON_Y + BUTTON_H/2) {
-			draw_button(0);
+			
 		}
 	}
+	
 }
 
 void mxt_handler(struct mxt_device *device, uint *x, uint *y)
@@ -383,7 +396,6 @@ void task_lcd(void){
 	configure_lcd();
   
   draw_screen();
-  draw_button(0);
   touchData touch;
     
   while (true) {  
