@@ -121,6 +121,24 @@ struct ili9488_opt_t g_ili9488_display_opt;
 #define AFEC_CHANNEL_TEMP_SENSOR 0
 
 /************************************************************************/
+/* PWM                                                                  */
+/************************************************************************/
+
+#define PIO_PWM_0 PIOA
+#define ID_PIO_PWM_0 ID_PIOA
+#define MASK_PIN_PWM_0 (1 << 0)
+
+/** PWM frequency in Hz */
+#define PWM_FREQUENCY      1000
+/** Period value of PWM output waveform */
+#define PERIOD_VALUE       100
+/** Initial duty cycle value */
+#define INIT_DUTY_VALUE    0
+
+/** PWM channel instance for LEDs */
+pwm_channel_t g_pwm_channel_led;
+
+/************************************************************************/
 /* Botoes                                                               */
 /************************************************************************/
 // Botao1
@@ -151,6 +169,7 @@ typedef struct {
 
 QueueHandle_t xQueueTouch;
 QueueHandle_t xQueueAFEC;
+QueueHandle_t xQueuePot;
 SemaphoreHandle_t xSemaphore1;
 SemaphoreHandle_t xSemaphore2;
 
@@ -495,6 +514,41 @@ static void config_ADC_TEMP(void){
 	afec_channel_enable(AFEC0, AFEC_CHANNEL_TEMP_SENSOR);
 }
 
+//Funcoes pwm
+void PWM0_init(uint channel, uint duty){
+	/* Enable PWM peripheral clock */
+	pmc_enable_periph_clk(ID_PWM0);
+
+	/* Disable PWM channels for LEDs */
+	pwm_channel_disable(PWM0, PIN_PWM_LED0_CHANNEL);
+
+	/* Set PWM clock A as PWM_FREQUENCY*PERIOD_VALUE (clock B is not used) */
+	pwm_clock_t clock_setting = {
+		.ul_clka = PWM_FREQUENCY * PERIOD_VALUE,
+		.ul_clkb = 0,
+		.ul_mck = sysclk_get_peripheral_hz()
+	};
+	
+	pwm_init(PWM0, &clock_setting);
+
+	/* Initialize PWM channel for LED0 */
+	/* Period is left-aligned */
+	g_pwm_channel_led.alignment = PWM_ALIGN_CENTER;
+	/* Output waveform starts at a low level */
+	g_pwm_channel_led.polarity = PWM_HIGH;
+	/* Use PWM clock A as source clock */
+	g_pwm_channel_led.ul_prescaler = PWM_CMR_CPRE_CLKA;
+	/* Period value of output waveform */
+	g_pwm_channel_led.ul_period = PERIOD_VALUE;
+	/* Duty cycle value of output waveform */
+	g_pwm_channel_led.ul_duty = duty;
+	g_pwm_channel_led.channel = channel;
+	pwm_channel_init(PWM0, &g_pwm_channel_led);
+	
+	/* Enable PWM channels for LEDs */
+	pwm_channel_enable(PWM0, channel);
+}
+
 /************************************************************************/
 /* tasks                                                                */
 /************************************************************************/
@@ -513,14 +567,18 @@ void task_mxt(void){
 	}
 }
 
-void task_lcd(void){
+void task_lcd(void){	
 	xQueueTouch = xQueueCreate( 10, sizeof( touchData ) );
+	xQueuePot = xQueueCreate(10, sizeof(int));
+	
+	//AFEC
 	xQueueAFEC = xQueueCreate(10, sizeof(uint32_t));
 	configure_lcd();
 	draw_screen();
 	uint32_t temp = 0;
 	int pot = 50;
 	
+	//BOTOES
 	xSemaphore1 = xSemaphoreCreateBinary();
 	xSemaphore2 = xSemaphoreCreateBinary();
 	io_init();
@@ -531,6 +589,7 @@ void task_lcd(void){
 			if (pot>100){
 				pot = 100;
 			}
+			xQueueSendFromISR(xQueuePot, &pot, 0);
 			update_potencia(pot);
 		}
 		if (xSemaphoreTake(xSemaphore2, (TickType_t) 10/portTICK_PERIOD_MS)){
@@ -538,6 +597,7 @@ void task_lcd(void){
 			if (pot<0){
 				pot = 0;
 			}
+			xQueueSendFromISR(xQueuePot, &pot, 0);
 			update_potencia(pot);
 		}
 		if (xQueueReceive( xQueueAFEC, &(temp), (TickType_t) 10/portTICK_PERIOD_MS)) {
@@ -552,6 +612,24 @@ void task_lcd(void){
 		afec_start_software_conversion(AFEC0);
 		vTaskDelay(4000);
  	}
+ }
+ 
+ void task_pwm(void){
+	 /* Configura pino para ser controlado pelo PWM */
+	 pmc_enable_periph_clk(ID_PIO_PWM_0);
+	 pio_set_peripheral(PIO_PWM_0, PIO_PERIPH_A, MASK_PIN_PWM_0 );
+	 
+	 /* inicializa PWM com dutycicle 0*/
+	 int duty = 0;
+	 PWM0_init(0, duty);
+	 
+	 
+	 while(true){
+		if (xQueueReceive( xQueuePot, &(duty), (TickType_t) 10/portTICK_PERIOD_MS)) {
+ 			 pwm_channel_update_duty(PWM0, &g_pwm_channel_led, 100-duty);
+ 			 vTaskDelay(10/portTICK_PERIOD_MS);
+		}
+	 }
  }
 
 /************************************************************************/
@@ -587,6 +665,11 @@ int main(void)
 	 /* Create task to handler AFEC*/
 	 if (xTaskCreate(task_afec, "afec", TASK_LCD_STACK_SIZE, NULL, TASK_LCD_STACK_PRIORITY-1, NULL) != pdPASS) {
 		 printf("Failed to create test afec task\r\n");
+	 }
+	 
+	 /* Create task to handler PWM*/
+	 if (xTaskCreate(task_pwm, "pwm", TASK_LCD_STACK_SIZE, NULL, TASK_LCD_STACK_PRIORITY-1, NULL) != pdPASS) {
+		 printf("Failed to create test pwm task\r\n");
 	 }
   
 	/* Start the scheduler. */
