@@ -119,6 +119,21 @@ struct ili9488_opt_t g_ili9488_display_opt;
 
 /* Canal do sensor de temperatura */
 #define AFEC_CHANNEL_TEMP_SENSOR 11
+
+/************************************************************************/
+/* Botoes                                                               */
+/************************************************************************/
+// Botao1
+#define BUT1_PIO      PIOD
+#define BUT1_PIO_ID   ID_PIOD
+#define BUT1_IDX  28
+#define BUT1_IDX_MASK (1 << BUT1_IDX)
+
+// Botao2
+#define BUT2_PIO      PIOC
+#define BUT2_PIO_ID   ID_PIOC
+#define BUT2_IDX  31
+#define BUT2_IDX_MASK (1 << BUT2_IDX)
 	
 /************************************************************************/
 /* RTOS                                                                  */
@@ -127,7 +142,7 @@ struct ili9488_opt_t g_ili9488_display_opt;
 #define TASK_MXT_STACK_PRIORITY        (tskIDLE_PRIORITY)  
 
 #define TASK_LCD_STACK_SIZE            (2*1024/sizeof(portSTACK_TYPE))
-#define TASK_LCD_STACK_PRIORITY        (tskIDLE_PRIORITY)
+#define TASK_LCD_STACK_PRIORITY        (configMAX_PRIORITIES-1)
 
 typedef struct {
   uint x;
@@ -136,6 +151,8 @@ typedef struct {
 
 QueueHandle_t xQueueTouch;
 QueueHandle_t xQueueAFEC;
+// SemaphoreHandle_t xSemaphore1;
+// SemaphoreHandle_t xSemaphore2;
 
 /************************************************************************/
 /* RTOS hooks                                                           */
@@ -316,7 +333,7 @@ void draw_screen(void) {
 	ili9488_draw_pixmap(50, 300, termometro.width, termometro.height, termometro.data);
 	ili9488_draw_pixmap(200, 300, ar.width, ar.height, ar.data);
 	
-	font_draw_text(&digital52, "20", 45, 250, 1);
+	font_draw_text(&digital52, "30", 45, 250, 1);
 	font_draw_text(&digital52, "HH:MM", 20, 20, 1);
 	font_draw_text(&digital52, "100%", 190, 250, 1);
 	font_draw_text(&digital52, "-------------", 0, 100, 1);
@@ -325,8 +342,13 @@ void draw_screen(void) {
 void update_temperatura(uint32_t temperatura)
 {
 	char str[32];
-	sprintf(str, "%d", temperatura);
-	font_draw_text(&digital52, str, 45, 250, 1);	
+	sprintf(str, "%d\n", temperatura);
+	font_draw_text(&digital52, str, 45, 250, 1);
+}
+
+void update_potencia(uint32_t pot)
+{
+	printf("chamou\n");
 }
 
 uint32_t convert_axis_system_x(uint32_t touch_y) {
@@ -353,8 +375,8 @@ void mxt_handler(struct mxt_device *device, uint *x, uint *y)
 	/* Temporary touch event data struct */
 	struct mxt_touch_event touch_event;
   
-  /* first touch only */
-  uint first = 0;
+	/* first touch only */
+	uint first = 0;
 
 	/* Collect touch events and put the data in a string,
 	 * maximum 2 events at the time */
@@ -373,17 +395,44 @@ void mxt_handler(struct mxt_device *device, uint *x, uint *y)
       *y = convert_axis_system_y(touch_event.x);
       first = 1;
     }
-    
 		i++;
-
 		/* Check if there is still messages in the queue and
 		 * if we have reached the maximum numbers of events */
 	} while ((mxt_is_message_pending(device)) & (i < MAX_ENTRIES));
 }
 
+//Funcoes botoes
+void aumenta_callback(void)
+{
+//	xSemaphoreGiveFromISR(xSemaphore1, 0);
+}
+
+void diminui_callback(void)
+{
+//	xSemaphoreGiveFromISR(xSemaphore2, 0);
+}
+
+// void io_init(void)
+// {
+// 	//configurando botão 1 e callback
+// 	pmc_enable_periph_clk(BUT1_PIO_ID);
+// 	pio_configure(BUT1_PIO, PIO_INPUT, BUT1_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
+// 	pio_handler_set(BUT1_PIO, BUT1_PIO_ID, BUT1_IDX_MASK, PIO_IT_RISE_EDGE, aumenta_callback);
+// 	pio_enable_interrupt(BUT1_PIO, BUT1_IDX_MASK);
+// 	NVIC_EnableIRQ(BUT1_PIO_ID);
+// 	NVIC_SetPriority(BUT1_PIO_ID, 4);
+// 	
+// 	//configurando botão 2 e callback
+// 	pmc_enable_periph_clk(BUT2_PIO_ID);
+// 	pio_configure(BUT2_PIO, PIO_INPUT, BUT2_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
+// 	pio_handler_set(BUT2_PIO, BUT2_PIO_ID, BUT2_IDX_MASK, PIO_IT_FALL_EDGE, diminui_callback);
+// 	pio_enable_interrupt(BUT2_PIO, BUT2_IDX_MASK);
+// 	NVIC_EnableIRQ(BUT2_PIO_ID);
+// 	NVIC_SetPriority(BUT2_PIO_ID, 4);
+// }
+
 
 //Funcoes afec
-
 static int32_t convert_adc_to_temp(int32_t ADC_value){
 	int32_t ul_vol;
 	int32_t ul_temp;
@@ -393,8 +442,9 @@ static int32_t convert_adc_to_temp(int32_t ADC_value){
 }
 
 static void AFEC_Temp_callback(void){
+	printf("bbbbbbb\n");
 	uint32_t temp = convert_adc_to_temp(afec_channel_get_value(AFEC0, AFEC_CHANNEL_TEMP_SENSOR));
-	xQueueSendFromISR(xQueueAFEC, &temp, NULL);
+	xQueueSendFromISR(xQueueAFEC, &(temp), 0);
 }
 
 static void config_ADC_TEMP(void){
@@ -414,7 +464,9 @@ static void config_ADC_TEMP(void){
 	afec_init(AFEC0, &afec_cfg);
 
 	/* Configura trigger por software */
-	afec_set_trigger(AFEC0, AFEC_TRIG_SW);
+	afec_set_trigger(AFEC0, AFEC_TRIG_TIO_CH_0);
+
+	AFEC0->AFEC_MR |= 3;
 
 	/* configura call back */
 	afec_set_callback(AFEC0, AFEC_INTERRUPT_EOC_11,	AFEC_Temp_callback, 5);
@@ -461,15 +513,14 @@ void task_mxt(void){
 }
 
 void task_lcd(void){
+	xQueueTouch = xQueueCreate( 10, sizeof( touchData ) );
 	xQueueAFEC = xQueueCreate(10, sizeof(uint32_t));
-	
 	configure_lcd();
 	draw_screen();
 	uint32_t temp = 0;
 	
 	while (true) {
-		if (xQueueReceive( xQueueAFEC, &(temp), (TickType_t)  500/portTICK_PERIOD_MS)) {
-			printf("%d\n",temp);
+		if (xQueueReceive( xQueueAFEC, &(temp), (TickType_t) 10/portTICK_PERIOD_MS)) {
 			update_temperatura(temp);
 		}
 	}	 
@@ -477,10 +528,10 @@ void task_lcd(void){
 
  void task_afec(void){
 	config_ADC_TEMP();
-	afec_start_software_conversion(AFEC0);
- 	while (true) {
+ 	while (true){		 
+		printf("ue\n");
 		afec_start_software_conversion(AFEC0);
-		vTaskDelay(4000/portTICK_PERIOD_MS);
+		vTaskDelay(100/portTICK_PERIOD_MS);
  	}
  }
 
@@ -504,27 +555,26 @@ int main(void)
 	/* Initialize stdio on USART */
 	stdio_serial_init(USART_SERIAL_EXAMPLE, &usart_serial_options);
 		
-  /* Create task to handler touch */
-  if (xTaskCreate(task_mxt, "mxt", TASK_MXT_STACK_SIZE, NULL, TASK_MXT_STACK_PRIORITY, NULL) != pdPASS) {
-    printf("Failed to create test led task\r\n");
-  }
+	 /* Create task to handler touch */
+	 if (xTaskCreate(task_mxt, "mxt", TASK_MXT_STACK_SIZE, NULL, TASK_MXT_STACK_PRIORITY, NULL) != pdPASS) {
+		 printf("Failed to create test led task\r\n");
+	 }
+	 
+	 /* Create task to handler LCD */
+	 if (xTaskCreate(task_lcd, "lcd", TASK_LCD_STACK_SIZE, NULL, TASK_LCD_STACK_PRIORITY, NULL) != pdPASS) {
+		 printf("Failed to create test lcd task\r\n");
+	 }
+	 
+	 /* Create task to handler AFEC*/
+	 if (xTaskCreate(task_afec, "afec", TASK_LCD_STACK_SIZE, NULL, TASK_LCD_STACK_PRIORITY-1, NULL) != pdPASS) {
+		 printf("Failed to create test afec task\r\n");
+	 }
   
-  /* Create task to handler LCD */
-  if (xTaskCreate(task_lcd, "lcd", TASK_LCD_STACK_SIZE, NULL, TASK_LCD_STACK_PRIORITY, NULL) != pdPASS) {
-    printf("Failed to create test led task\r\n");
-  }
-	
-  /* Create task to AFEC */
-   if (xTaskCreate(task_afec, "afec", TASK_LCD_STACK_SIZE, NULL, TASK_LCD_STACK_PRIORITY, NULL) != pdPASS) {
- 	  printf("Failed to create test led task\r\n");
-   }
-  
-  /* Start the scheduler. */
-  vTaskStartScheduler();
+	/* Start the scheduler. */
+	vTaskStartScheduler();
 
-  while(1){
-
-  }
-
+	while(1){
+		
+	}
 	return 0;
 }
