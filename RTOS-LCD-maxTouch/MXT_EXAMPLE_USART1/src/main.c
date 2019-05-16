@@ -172,6 +172,7 @@ QueueHandle_t xQueueAFEC;
 QueueHandle_t xQueuePot;
 SemaphoreHandle_t xSemaphore1;
 SemaphoreHandle_t xSemaphore2;
+SemaphoreHandle_t xSemaphoreTime;
 
 /************************************************************************/
 /* RTOS hooks                                                           */
@@ -378,6 +379,14 @@ void update_potencia(int pot)
 	}
 }
 
+void update_hora(int hora, int min)
+{
+	font_draw_text(&digital52, "", 190, 250, 1);
+	char str[16];
+	sprintf(str, "%02d:%02d", hora, min);
+	font_draw_text(&digital52, str, 20, 20, 1);	
+}
+
 uint32_t convert_axis_system_x(uint32_t touch_y) {
 	// entrada: 4096 - 0 (sistema de coordenadas atual)
 	// saida: 0 - 320
@@ -549,6 +558,9 @@ void PWM0_init(uint channel, uint duty){
 	pwm_channel_enable(PWM0, channel);
 }
 
+//Funcoes RTC
+
+
 /************************************************************************/
 /* tasks                                                                */
 /************************************************************************/
@@ -623,7 +635,6 @@ void task_lcd(void){
 	 int duty = 0;
 	 PWM0_init(0, duty);
 	 
-	 
 	 while(true){
 		if (xQueueReceive( xQueuePot, &(duty), (TickType_t) 10/portTICK_PERIOD_MS)) {
  			 pwm_channel_update_duty(PWM0, &g_pwm_channel_led, 100-duty);
@@ -631,6 +642,7 @@ void task_lcd(void){
 		}
 	 }
  }
+ 
 
 /************************************************************************/
 /* main                                                                 */

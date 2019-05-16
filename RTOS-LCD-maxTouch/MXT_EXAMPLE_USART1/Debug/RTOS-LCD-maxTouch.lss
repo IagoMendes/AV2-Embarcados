@@ -9,39 +9,39 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
   2 .relocate     000009c0  20400000  00455edc  00070000  2**3
                   CONTENTS, ALLOC, LOAD, CODE
-  3 .bss          0000bf30  204009c0  0045689c  000709c0  2**2
+  3 .bss          0000bf34  204009c0  0045689c  000709c0  2**2
                   ALLOC
-  4 .stack        00002000  2040c8f0  004627cc  000709c0  2**0
+  4 .stack        00002004  2040c8f4  004627d0  000709c0  2**0
                   ALLOC
-  5 .heap         00000200  2040e8f0  004647cc  000709c0  2**0
+  5 .heap         00000200  2040e8f8  004647d4  000709c0  2**0
                   ALLOC
   6 .ARM.attributes 0000002e  00000000  00000000  000709c0  2**0
                   CONTENTS, READONLY
   7 .comment      00000059  00000000  00000000  000709ee  2**0
                   CONTENTS, READONLY
-  8 .debug_info   0002ec4f  00000000  00000000  00070a47  2**0
+  8 .debug_info   0002ed3d  00000000  00000000  00070a47  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_abbrev 00005c7a  00000000  00000000  0009f696  2**0
+  9 .debug_abbrev 00005c7a  00000000  00000000  0009f784  2**0
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_loc    0000ed5e  00000000  00000000  000a5310  2**0
+ 10 .debug_loc    0000edf9  00000000  00000000  000a53fe  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_aranges 00001448  00000000  00000000  000b406e  2**0
+ 11 .debug_aranges 00001450  00000000  00000000  000b41f7  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_ranges 000016e0  00000000  00000000  000b54b6  2**0
+ 12 .debug_ranges 000016e8  00000000  00000000  000b5647  2**0
                   CONTENTS, READONLY, DEBUGGING
- 13 .debug_macro  00026dbf  00000000  00000000  000b6b96  2**0
+ 13 .debug_macro  00026dcc  00000000  00000000  000b6d2f  2**0
                   CONTENTS, READONLY, DEBUGGING
- 14 .debug_line   000178f2  00000000  00000000  000dd955  2**0
+ 14 .debug_line   0001792a  00000000  00000000  000ddafb  2**0
                   CONTENTS, READONLY, DEBUGGING
- 15 .debug_str    0009f9ab  00000000  00000000  000f5247  2**0
+ 15 .debug_str    0009f9d6  00000000  00000000  000f5425  2**0
                   CONTENTS, READONLY, DEBUGGING
- 16 .debug_frame  00004614  00000000  00000000  00194bf4  2**2
+ 16 .debug_frame  0000463c  00000000  00000000  00194dfc  2**2
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
 
 00400000 <exception_table>:
-  400000:	f0 e8 40 20 ed 20 40 00 eb 20 40 00 eb 20 40 00     ..@ . @.. @.. @.
+  400000:	f8 e8 40 20 ed 20 40 00 eb 20 40 00 eb 20 40 00     ..@ . @.. @.. @.
   400010:	eb 20 40 00 eb 20 40 00 eb 20 40 00 00 00 00 00     . @.. @.. @.....
 	...
   40002c:	c5 24 40 00 eb 20 40 00 00 00 00 00 65 25 40 00     .$@.. @.....e%@.
@@ -5750,7 +5750,7 @@ __always_inline static void fpu_enable(void)
   402188:	20400000 	.word	0x20400000
   40218c:	00455edc 	.word	0x00455edc
   402190:	204009c0 	.word	0x204009c0
-  402194:	2040c8f0 	.word	0x2040c8f0
+  402194:	2040c8f4 	.word	0x2040c8f4
   402198:	204009c0 	.word	0x204009c0
   40219c:	e000ed00 	.word	0xe000ed00
   4021a0:	00400000 	.word	0x00400000
@@ -6065,7 +6065,7 @@ void system_init_flash( uint32_t ul_clk )
   402376:	bf00      	nop
   402378:	20400e14 	.word	0x20400e14
   40237c:	2045fffc 	.word	0x2045fffc
-  402380:	2040eaf0 	.word	0x2040eaf0
+  402380:	2040eaf8 	.word	0x2040eaf8
 
 00402384 <_close>:
 }
@@ -10344,7 +10344,7 @@ void aumenta_callback(void)
   404112:	4798      	blx	r3
   404114:	bd08      	pop	{r3, pc}
   404116:	bf00      	nop
-  404118:	2040c8ac 	.word	0x2040c8ac
+  404118:	2040c8b0 	.word	0x2040c8b0
   40411c:	00402da1 	.word	0x00402da1
 
 00404120 <diminui_callback>:
@@ -10361,7 +10361,7 @@ void diminui_callback(void)
   40412a:	4798      	blx	r3
   40412c:	bd08      	pop	{r3, pc}
   40412e:	bf00      	nop
-  404130:	2040c8b0 	.word	0x2040c8b0
+  404130:	2040c8b4 	.word	0x2040c8b4
   404134:	00402da1 	.word	0x00402da1
 
 00404138 <AFEC_Temp_callback>:
@@ -10401,7 +10401,7 @@ static void AFEC_Temp_callback(void){
   40416a:	bd10      	pop	{r4, pc}
   40416c:	4003c000 	.word	0x4003c000
   404170:	20324e9b 	.word	0x20324e9b
-  404174:	2040c8a8 	.word	0x2040c8a8
+  404174:	2040c8ac 	.word	0x2040c8ac
   404178:	00402ca1 	.word	0x00402ca1
 
 0040417c <task_afec>:
@@ -11301,7 +11301,7 @@ static inline uint32_t twihs_master_setup(twihs_master_t p_twihs,
   40478c:	004004ad 	.word	0x004004ad
   404790:	0040056d 	.word	0x0040056d
   404794:	004045a5 	.word	0x004045a5
-  404798:	2040c8c4 	.word	0x2040c8c4
+  404798:	2040c8c8 	.word	0x2040c8c8
   40479c:	004036a9 	.word	0x004036a9
   4047a0:	00402abd 	.word	0x00402abd
 
@@ -11529,15 +11529,15 @@ void task_lcd(void){
   404938:	250a      	movs	r5, #10
   40493a:	e7c9      	b.n	4048d0 <task_lcd+0x80>
   40493c:	00402a41 	.word	0x00402a41
-  404940:	2040c8c4 	.word	0x2040c8c4
-  404944:	2040c8a4 	.word	0x2040c8a4
-  404948:	2040c8a8 	.word	0x2040c8a8
-  40494c:	2040c8b4 	.word	0x2040c8b4
+  404940:	2040c8c8 	.word	0x2040c8c8
+  404944:	2040c8a8 	.word	0x2040c8a8
+  404948:	2040c8ac 	.word	0x2040c8ac
+  40494c:	2040c8b8 	.word	0x2040c8b8
   404950:	00fcfcfc 	.word	0x00fcfcfc
   404954:	00400e49 	.word	0x00400e49
   404958:	00404459 	.word	0x00404459
-  40495c:	2040c8ac 	.word	0x2040c8ac
-  404960:	2040c8b0 	.word	0x2040c8b0
+  40495c:	2040c8b0 	.word	0x2040c8b0
+  404960:	2040c8b4 	.word	0x2040c8b4
   404964:	004047a5 	.word	0x004047a5
   404968:	00402e81 	.word	0x00402e81
   40496c:	00404545 	.word	0x00404545
@@ -11640,7 +11640,6 @@ void PWM0_init(uint channel, uint duty){
   404a10:	4b0e      	ldr	r3, [pc, #56]	; (404a4c <task_pwm+0x58>)
   404a12:	4798      	blx	r3
 	 
-	 
 	 while(true){
 		if (xQueueReceive( xQueuePot, &(duty), (TickType_t) 10/portTICK_PERIOD_MS)) {
   404a14:	4e0e      	ldr	r6, [pc, #56]	; (404a50 <task_pwm+0x5c>)
@@ -11670,7 +11669,7 @@ void PWM0_init(uint channel, uint duty){
   404a44:	400e0e00 	.word	0x400e0e00
   404a48:	00401445 	.word	0x00401445
   404a4c:	00404979 	.word	0x00404979
-  404a50:	2040c8a4 	.word	0x2040c8a4
+  404a50:	2040c8a8 	.word	0x2040c8a8
   404a54:	00402e81 	.word	0x00402e81
   404a58:	2040c868 	.word	0x2040c868
   404a5c:	40020000 	.word	0x40020000
@@ -12623,13 +12622,13 @@ static inline void stdio_serial_init(volatile void *usart, const usart_serial_op
   405388:	4801      	ldr	r0, [pc, #4]	; (405390 <__malloc_lock+0x8>)
   40538a:	f003 bf79 	b.w	409280 <__retarget_lock_acquire_recursive>
   40538e:	bf00      	nop
-  405390:	2040c8d8 	.word	0x2040c8d8
+  405390:	2040c8dc 	.word	0x2040c8dc
 
 00405394 <__malloc_unlock>:
   405394:	4801      	ldr	r0, [pc, #4]	; (40539c <__malloc_unlock+0x8>)
   405396:	f003 bf75 	b.w	409284 <__retarget_lock_release_recursive>
   40539a:	bf00      	nop
-  40539c:	2040c8d8 	.word	0x2040c8d8
+  40539c:	2040c8dc 	.word	0x2040c8dc
 
 004053a0 <_sbrk_r>:
   4053a0:	b538      	push	{r3, r4, r5, lr}
@@ -12647,7 +12646,7 @@ static inline void stdio_serial_init(volatile void *usart, const usart_serial_op
   4053ba:	d0fb      	beq.n	4053b4 <_sbrk_r+0x14>
   4053bc:	602b      	str	r3, [r5, #0]
   4053be:	bd38      	pop	{r3, r4, r5, pc}
-  4053c0:	2040c8ec 	.word	0x2040c8ec
+  4053c0:	2040c8f0 	.word	0x2040c8f0
 
 004053c4 <setbuf>:
   4053c4:	2900      	cmp	r1, #0
@@ -18118,20 +18117,20 @@ static inline void stdio_serial_init(volatile void *usart, const usart_serial_op
   408b2a:	e8bd 4010 	ldmia.w	sp!, {r4, lr}
   408b2e:	f000 bba9 	b.w	409284 <__retarget_lock_release_recursive>
   408b32:	bf00      	nop
-  408b34:	2040c8d4 	.word	0x2040c8d4
+  408b34:	2040c8d8 	.word	0x2040c8d8
   408b38:	00408a89 	.word	0x00408a89
 
 00408b3c <__sfp_lock_acquire>:
   408b3c:	4801      	ldr	r0, [pc, #4]	; (408b44 <__sfp_lock_acquire+0x8>)
   408b3e:	f000 bb9f 	b.w	409280 <__retarget_lock_acquire_recursive>
   408b42:	bf00      	nop
-  408b44:	2040c8e8 	.word	0x2040c8e8
+  408b44:	2040c8ec 	.word	0x2040c8ec
 
 00408b48 <__sfp_lock_release>:
   408b48:	4801      	ldr	r0, [pc, #4]	; (408b50 <__sfp_lock_release+0x8>)
   408b4a:	f000 bb9b 	b.w	409284 <__retarget_lock_release_recursive>
   408b4e:	bf00      	nop
-  408b50:	2040c8e8 	.word	0x2040c8e8
+  408b50:	2040c8ec 	.word	0x2040c8ec
 
 00408b54 <__libc_fini_array>:
   408b54:	b538      	push	{r3, r4, r5, lr}
@@ -20416,7 +20415,7 @@ static inline void stdio_serial_init(volatile void *usart, const usart_serial_op
   40a11e:	6033      	str	r3, [r6, #0]
   40a120:	bd70      	pop	{r4, r5, r6, pc}
   40a122:	bf00      	nop
-  40a124:	2040c8ec 	.word	0x2040c8ec
+  40a124:	2040c8f0 	.word	0x2040c8f0
 
 0040a128 <__register_exitproc>:
   40a128:	e92d 43f8 	stmdb	sp!, {r3, r4, r5, r6, r7, r8, r9, lr}
@@ -20546,7 +20545,7 @@ static inline void stdio_serial_init(volatile void *usart, const usart_serial_op
   40a266:	d0fb      	beq.n	40a260 <_close_r+0x14>
   40a268:	602b      	str	r3, [r5, #0]
   40a26a:	bd38      	pop	{r3, r4, r5, pc}
-  40a26c:	2040c8ec 	.word	0x2040c8ec
+  40a26c:	2040c8f0 	.word	0x2040c8f0
 
 0040a270 <_fclose_r>:
   40a270:	b570      	push	{r4, r5, r6, lr}
@@ -20650,7 +20649,7 @@ static inline void stdio_serial_init(volatile void *usart, const usart_serial_op
   40a352:	d0fb      	beq.n	40a34c <_fstat_r+0x18>
   40a354:	602b      	str	r3, [r5, #0]
   40a356:	bd38      	pop	{r3, r4, r5, pc}
-  40a358:	2040c8ec 	.word	0x2040c8ec
+  40a358:	2040c8f0 	.word	0x2040c8f0
 
 0040a35c <_isatty_r>:
   40a35c:	b538      	push	{r3, r4, r5, lr}
@@ -20668,7 +20667,7 @@ static inline void stdio_serial_init(volatile void *usart, const usart_serial_op
   40a376:	d0fb      	beq.n	40a370 <_isatty_r+0x14>
   40a378:	602b      	str	r3, [r5, #0]
   40a37a:	bd38      	pop	{r3, r4, r5, pc}
-  40a37c:	2040c8ec 	.word	0x2040c8ec
+  40a37c:	2040c8f0 	.word	0x2040c8f0
 
 0040a380 <_lseek_r>:
   40a380:	b570      	push	{r4, r5, r6, lr}
@@ -20690,7 +20689,7 @@ static inline void stdio_serial_init(volatile void *usart, const usart_serial_op
   40a3a2:	6033      	str	r3, [r6, #0]
   40a3a4:	bd70      	pop	{r4, r5, r6, pc}
   40a3a6:	bf00      	nop
-  40a3a8:	2040c8ec 	.word	0x2040c8ec
+  40a3a8:	2040c8f0 	.word	0x2040c8f0
 
 0040a3ac <_read_r>:
   40a3ac:	b570      	push	{r4, r5, r6, lr}
@@ -20712,7 +20711,7 @@ static inline void stdio_serial_init(volatile void *usart, const usart_serial_op
   40a3ce:	6033      	str	r3, [r6, #0]
   40a3d0:	bd70      	pop	{r4, r5, r6, pc}
   40a3d2:	bf00      	nop
-  40a3d4:	2040c8ec 	.word	0x2040c8ec
+  40a3d4:	2040c8f0 	.word	0x2040c8f0
 
 0040a3d8 <__aeabi_drsub>:
   40a3d8:	f081 4100 	eor.w	r1, r1, #2147483648	; 0x80000000
@@ -41420,7 +41419,7 @@ void portable_delay_cycles(unsigned long n)
 2040084c:	0000 0002                                   ....
 
 20400850 <__atexit_recursive_mutex>:
-20400850:	c8c8 2040                                   ..@ 
+20400850:	c8cc 2040                                   ..@ 
 
 20400854 <__global_locale>:
 20400854:	0043 0000 0000 0000 0000 0000 0000 0000     C...............
