@@ -353,9 +353,9 @@ void draw_screen(void) {
 	ili9488_draw_pixmap(50, 300, termometro.width, termometro.height, termometro.data);
 	ili9488_draw_pixmap(200, 300, ar.width, ar.height, ar.data);
 	
-	font_draw_text(&digital52, "30", 45, 250, 1);
-	font_draw_text(&digital52, "HH:MM", 20, 20, 1);
-	font_draw_text(&digital52, "100%", 190, 250, 1);
+	font_draw_text(&digital52, "30", 45, 225, 1);
+	font_draw_text(&digital52, "15:00", 20, 20, 1);
+	font_draw_text(&digital52, "100%", 190, 225, 1);
 	font_draw_text(&digital52, "-------------", 0, 100, 1);
 }
 
@@ -363,25 +363,23 @@ void update_temperatura(uint32_t temperatura)
 {
 	char str[4];
 	sprintf(str, "%d", temperatura);
-	font_draw_text(&digital52, str, 45, 250, 1);
+	font_draw_text(&digital52, str, 45, 225, 1);
 }
 
 void update_potencia(int pot)
 {
-	font_draw_text(&digital52, "", 190, 250, 1);
 	if (pot==100){
-		font_draw_text(&digital52, "100%", 190, 250, 1);
+		font_draw_text(&digital52, "100%", 190, 225, 1);
 	}
 	else{
 		char str[4];
 		sprintf(str, "%d %", pot);
-		font_draw_text(&digital52, str, 190, 250, 1);		
+		font_draw_text(&digital52, str, 190, 225, 1);		
 	}
 }
 
 void update_hora(int hora, int min)
 {
-	font_draw_text(&digital52, "", 190, 250, 1);
 	char str[16];
 	sprintf(str, "%02d:%02d", hora, min);
 	font_draw_text(&digital52, str, 20, 20, 1);	
@@ -595,6 +593,11 @@ void task_lcd(void){
 	xSemaphore2 = xSemaphoreCreateBinary();
 	io_init();
 	
+	//Tempo
+	xSemaphoreTime = xSemaphoreCreateBinary();
+	int hora = 15;
+	int min = 0;
+	
 	while (true) {
 		if (xSemaphoreTake(xSemaphore1, (TickType_t) 10/portTICK_PERIOD_MS)){
 			pot += 10;
@@ -611,6 +614,14 @@ void task_lcd(void){
 			}
 			xQueueSendFromISR(xQueuePot, &pot, 0);
 			update_potencia(pot);
+		}
+		if (xSemaphoreTake(xSemaphoreTime, (TickType_t) 10/portTICK_PERIOD_MS)){
+			min ++;
+			if(min>59){
+				min = 0;
+				hora ++;
+			}
+			update_hora(hora, min);
 		}
 		if (xQueueReceive( xQueueAFEC, &(temp), (TickType_t) 10/portTICK_PERIOD_MS)) {
 			update_temperatura(temp);
@@ -643,6 +654,12 @@ void task_lcd(void){
 	 }
  }
  
+void task_time(void){
+	 while(true){
+		vTaskDelay(60000/portTICK_PERIOD_MS);
+		xSemaphoreGiveFromISR(xSemaphoreTime, 0);
+	 }
+ }
 
 /************************************************************************/
 /* main                                                                 */
@@ -683,7 +700,10 @@ int main(void)
 	 if (xTaskCreate(task_pwm, "pwm", TASK_LCD_STACK_SIZE, NULL, TASK_LCD_STACK_PRIORITY-1, NULL) != pdPASS) {
 		 printf("Failed to create test pwm task\r\n");
 	 }
-  
+	
+	if (xTaskCreate(task_time, "time", TASK_LCD_STACK_SIZE, NULL, TASK_LCD_STACK_PRIORITY-1, NULL) != pdPASS) {
+		printf("Failed to create test time task\r\n");
+	}  
 	/* Start the scheduler. */
 	vTaskStartScheduler();
 
