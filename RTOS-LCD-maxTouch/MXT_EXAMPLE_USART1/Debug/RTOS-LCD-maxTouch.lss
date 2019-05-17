@@ -29,11 +29,11 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING
  12 .debug_ranges 000016f0  00000000  00000000  000b57c9  2**0
                   CONTENTS, READONLY, DEBUGGING
- 13 .debug_macro  00026dbf  00000000  00000000  000b6eb9  2**0
+ 13 .debug_macro  00026dbd  00000000  00000000  000b6eb9  2**0
                   CONTENTS, READONLY, DEBUGGING
- 14 .debug_line   0001792b  00000000  00000000  000ddc78  2**0
+ 14 .debug_line   0001792b  00000000  00000000  000ddc76  2**0
                   CONTENTS, READONLY, DEBUGGING
- 15 .debug_str    0009f9d0  00000000  00000000  000f55a3  2**0
+ 15 .debug_str    0009f9d0  00000000  00000000  000f55a1  2**0
                   CONTENTS, READONLY, DEBUGGING
  16 .debug_frame  00004650  00000000  00000000  00194f74  2**2
                   CONTENTS, READONLY, DEBUGGING
@@ -10940,10 +10940,10 @@ void draw_screen(void) {
   4044ea:	4910      	ldr	r1, [pc, #64]	; (40452c <draw_screen+0xb0>)
   4044ec:	4628      	mov	r0, r5
   4044ee:	47a0      	blx	r4
-	font_draw_text(&digital52, "-------------", 0, 100, 1);
+	font_draw_text(&digital52, "------------", 15, 100, 1);
   4044f0:	9600      	str	r6, [sp, #0]
   4044f2:	2364      	movs	r3, #100	; 0x64
-  4044f4:	2200      	movs	r2, #0
+  4044f4:	220f      	movs	r2, #15
   4044f6:	490e      	ldr	r1, [pc, #56]	; (404530 <draw_screen+0xb4>)
   4044f8:	4628      	mov	r0, r5
   4044fa:	47a0      	blx	r4
@@ -22176,7 +22176,7 @@ static inline void stdio_serial_init(volatile void *usart, const usart_serial_op
   40b8e8:	0000007c 0040b5d8 0000007d 0040b5e8     |.....@.}.....@.
   40b8f8:	0000007e 0040b5f8 00003033 303a3531     ~.....@.30..15:0
   40b908:	00000030 25303031 00000000 2d2d2d2d     0...100%....----
-  40b918:	2d2d2d2d 2d2d2d2d 0000002d              ---------...
+  40b918:	2d2d2d2d 2d2d2d2d 00000000              --------....
 
 0040b924 <image_data_ar>:
   40b924:	ffffffff ffffffff ffffffff ffffffff     ................

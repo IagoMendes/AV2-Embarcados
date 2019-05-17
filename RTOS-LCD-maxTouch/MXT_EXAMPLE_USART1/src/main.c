@@ -92,13 +92,11 @@
 #include "conf_board.h"
 #include "conf_example.h"
 #include "conf_uart_serial.h"
-
 #include "tfont.h"
 #include "soneca.h"
 #include "termometro.h"
 #include "digital521.h"
 #include "ar.h"
-
 
 /************************************************************************/
 /* LCD + TOUCH                                                          */
@@ -356,7 +354,7 @@ void draw_screen(void) {
 	font_draw_text(&digital52, "30", 45, 225, 1);
 	font_draw_text(&digital52, "15:00", 20, 20, 1);
 	font_draw_text(&digital52, "100%", 190, 225, 1);
-	font_draw_text(&digital52, "-------------", 0, 100, 1);
+	font_draw_text(&digital52, "------------", 15, 100, 1);
 }
 
 void update_temperatura(uint32_t temperatura)
@@ -566,9 +564,6 @@ void PWM0_init(uint channel, uint duty){
 	pwm_channel_enable(PWM0, channel);
 }
 
-//Funcoes RTC
-
-
 /************************************************************************/
 /* tasks                                                                */
 /************************************************************************/
@@ -598,7 +593,7 @@ void task_lcd(void){
 	uint32_t temp = 0;
 	int pot = 50;
 	
-	//BOTOES
+	//Botoes
 	xSemaphore1 = xSemaphoreCreateBinary();
 	xSemaphore2 = xSemaphoreCreateBinary();
 	io_init();
@@ -714,6 +709,7 @@ int main(void)
 	if (xTaskCreate(task_time, "time", TASK_LCD_STACK_SIZE, NULL, TASK_LCD_STACK_PRIORITY-1, NULL) != pdPASS) {
 		printf("Failed to create test time task\r\n");
 	}  
+	
 	/* Start the scheduler. */
 	vTaskStartScheduler();
 

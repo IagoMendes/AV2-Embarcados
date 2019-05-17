@@ -12189,8 +12189,8 @@ LOAD c:/program files (x86)/atmel/studio/7.0/toolchain/arm/arm-gnu-toolchain/bin
  .rodata.digital52_array
                 0x0040b608      0x2f8 src/main.o
  .rodata.draw_screen.str1.4
-                0x0040b900       0x22 src/main.o
- *fill*         0x0040b922        0x2 
+                0x0040b900       0x21 src/main.o
+ *fill*         0x0040b921        0x3 
  .rodata.image_data_ar
                 0x0040b924     0x4830 src/main.o
  .rodata.image_data_digital52_0x20
@@ -13048,7 +13048,7 @@ OUTPUT(RTOS-LCD-maxTouch.elf elf32-littlearm)
  .debug_ranges  0x00001510       0xc0 src/ASF/thirdparty/freertos/freertos-8.2.3/Source/timers.o
  .debug_ranges  0x000015d0      0x120 src/main.o
 
-.debug_macro    0x00000000    0x26dbf
+.debug_macro    0x00000000    0x26dbd
  .debug_macro   0x00000000      0x771 src/ASF/common/components/touch/mxt/mxt_device_1.o
  .debug_macro   0x00000771      0x8da src/ASF/common/components/touch/mxt/mxt_device_1.o
  .debug_macro   0x0000104b      0x6d7 src/ASF/common/components/touch/mxt/mxt_device_1.o
@@ -13264,19 +13264,19 @@ OUTPUT(RTOS-LCD-maxTouch.elf elf32-littlearm)
  .debug_macro   0x00024fcb      0x7a6 src/ASF/thirdparty/freertos/freertos-8.2.3/Source/tasks.o
  .debug_macro   0x00025771       0x10 src/ASF/thirdparty/freertos/freertos-8.2.3/Source/tasks.o
  .debug_macro   0x00025781      0x727 src/ASF/thirdparty/freertos/freertos-8.2.3/Source/timers.o
- .debug_macro   0x00025ea8      0xa79 src/main.o
- .debug_macro   0x00026921       0x28 src/main.o
- .debug_macro   0x00026949       0x22 src/main.o
- .debug_macro   0x0002696b      0x149 src/main.o
- .debug_macro   0x00026ab4       0x7f src/main.o
- .debug_macro   0x00026b33       0x40 src/main.o
- .debug_macro   0x00026b73      0x1c8 src/main.o
- .debug_macro   0x00026d3b       0x10 src/main.o
- .debug_macro   0x00026d4b       0x16 src/main.o
- .debug_macro   0x00026d61       0x1c src/main.o
- .debug_macro   0x00026d7d       0x16 src/main.o
- .debug_macro   0x00026d93       0x16 src/main.o
- .debug_macro   0x00026da9       0x16 src/main.o
+ .debug_macro   0x00025ea8      0xa77 src/main.o
+ .debug_macro   0x0002691f       0x28 src/main.o
+ .debug_macro   0x00026947       0x22 src/main.o
+ .debug_macro   0x00026969      0x149 src/main.o
+ .debug_macro   0x00026ab2       0x7f src/main.o
+ .debug_macro   0x00026b31       0x40 src/main.o
+ .debug_macro   0x00026b71      0x1c8 src/main.o
+ .debug_macro   0x00026d39       0x10 src/main.o
+ .debug_macro   0x00026d49       0x16 src/main.o
+ .debug_macro   0x00026d5f       0x1c src/main.o
+ .debug_macro   0x00026d7b       0x16 src/main.o
+ .debug_macro   0x00026d91       0x16 src/main.o
+ .debug_macro   0x00026da7       0x16 src/main.o
 
 .debug_line     0x00000000    0x1792b
  .debug_line    0x00000000      0xe92 src/ASF/common/components/touch/mxt/mxt_device_1.o
