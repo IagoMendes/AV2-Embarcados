@@ -364,6 +364,16 @@ void update_temperatura(uint32_t temperatura)
 	char str[4];
 	sprintf(str, "%d", temperatura);
 	font_draw_text(&digital52, str, 45, 225, 1);
+	
+	ili9488_draw_pixmap(50, 300, termometro.width, termometro.height, termometro.data);
+	if (temperatura > 50){
+		
+	}else if(temperatura > 25){
+		ili9488_draw_filled_rectangle(64, 305, 70, 325);
+	}else{
+		ili9488_draw_filled_rectangle(64, 305, 70, 345);
+	}
+	
 }
 
 void update_potencia(int pot)
